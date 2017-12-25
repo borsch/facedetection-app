@@ -26,6 +26,12 @@
 			</padding>
    <children>
    			<Button fx:id="cameraButton" alignment="center" onAction="#startCamera" text="Start camera" />
+   			<HBox alignment="CENTER">
+			<padding>
+				<Insets bottom="0" left="25" right="25" top="0" />
+			</padding>
+		</HBox>
+   			<Button fx:id="saveImageButton" alignment="center" onAction="#saveImage" text="Save image" />
    </children>
 		</HBox>
 	</bottom>

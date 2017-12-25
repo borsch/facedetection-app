@@ -1,5 +1,7 @@
 package it.polito.teaching.cv;
 
+import java.awt.Event;
+import java.util.Date;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -40,7 +42,9 @@ public class FaceDetectionController
 	// the FXML area for showing the current frame
 	@FXML
 	private ImageView originalFrame;
-	// checkboxes for enabling/disabling a classifier
+	
+	@FXML
+	private Button saveImageButton;
 	
 	// a timer for acquiring the video stream
 	private ScheduledExecutorService timer;
@@ -68,6 +72,7 @@ public class FaceDetectionController
 		originalFrame.setPreserveRatio(true);
 		
 		faceCascade.load("resources/haarcascades/haarcascade_frontalface_alt.xml");
+		this.saveImageButton.setDisable(true);
 	}
 	
 	/**
@@ -105,6 +110,7 @@ public class FaceDetectionController
 				
 				// update the button content
 				this.cameraButton.setText("Stop Camera");
+				this.saveImageButton.setDisable(false);
 			}
 			else
 			{
@@ -118,9 +124,19 @@ public class FaceDetectionController
 			this.cameraActive = false;
 			// update again the button content
 			this.cameraButton.setText("Start Camera");
+			this.saveImageButton.setDisable(true);
 			
 			// stop the timer
 			this.stopAcquisition();
+		}
+	}
+	
+	@FXML
+	protected void saveImage() {
+		if (this.cameraActive) {
+			Mat frame = grabFrame();
+			
+			saveFaces(frame);
 		}
 	}
 	
@@ -192,11 +208,43 @@ public class FaceDetectionController
 		// each rectangle in faces is a face: draw them!
 		Rect[] facesArray = faces.toArray();
 		for (Rect face : facesArray) {
-			Mat subImage = new Mat(grayFrame, face);
-			Imgcodecs.imwrite("temp.png", subImage);
 			Imgproc.rectangle(frame, face.tl(), face.br(), new Scalar(0, 255, 0), 3);
 		}
 			
+	}
+	
+	private void saveFaces(Mat frame) {
+		MatOfRect faces = new MatOfRect();
+		Mat grayFrame = new Mat();
+		
+		// convert the frame in gray scale
+		Imgproc.cvtColor(frame, grayFrame, Imgproc.COLOR_BGR2GRAY);
+		// equalize the frame histogram to improve the result
+		Imgproc.equalizeHist(grayFrame, grayFrame);
+		
+		// compute minimum face size (20% of the frame height, in our case)
+		if (this.absoluteFaceSize == 0)
+		{
+			int height = grayFrame.rows();
+			if (Math.round(height * 0.2f) > 0)
+			{
+				this.absoluteFaceSize = Math.round(height * 0.2f);
+			}
+		}
+		
+		// detect faces
+		this.faceCascade.detectMultiScale(grayFrame, faces, 1.1, 2, 0 | Objdetect.CASCADE_SCALE_IMAGE,
+				new Size(this.absoluteFaceSize, this.absoluteFaceSize), new Size());
+				
+		// each rectangle in faces is a face: draw them!
+		Rect[] facesArray = faces.toArray();
+		for (Rect face : facesArray) {
+			Mat subImage = new Mat(frame, face);
+			
+			String name = "temp/temp_" + new Date().getTime() + ".png";
+			
+			Imgcodecs.imwrite(name, subImage);
+		}
 	}
 	
 	/**
