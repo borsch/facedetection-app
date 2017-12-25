@@ -262,6 +262,7 @@ public class FaceDetectionController
 			
 			try {
 				file.setWritable(true);
+				file.delete();
 			} catch (Exception e) {
 				
 			}
