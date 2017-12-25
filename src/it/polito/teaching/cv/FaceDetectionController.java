@@ -1,7 +1,9 @@
 package it.polito.teaching.cv;
 
-import java.awt.Event;
+import java.io.File;
+import java.io.IOException;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -17,6 +19,8 @@ import org.opencv.objdetect.CascadeClassifier;
 import org.opencv.objdetect.Objdetect;
 import org.opencv.videoio.VideoCapture;
 
+import it.polito.elite.teaching.cv.utils.Constants;
+import it.polito.elite.teaching.cv.utils.MultipartUtility;
 import it.polito.elite.teaching.cv.utils.Utils;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -242,8 +246,19 @@ public class FaceDetectionController
 			Mat subImage = new Mat(frame, face);
 			
 			String name = "temp/temp_" + new Date().getTime() + ".png";
+			File file = new File(name);
 			
-			Imgcodecs.imwrite(name, subImage);
+			Imgcodecs.imwrite(file.getAbsolutePath(), subImage);
+			
+			try {
+				MultipartUtility multipartUtility = new MultipartUtility(Constants.UPLOAD_FILE_URL, "UTF-8");
+				
+				multipartUtility.addFilePart("file", file);
+				List<String> result = multipartUtility.finish();
+				System.out.println(result);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 	
