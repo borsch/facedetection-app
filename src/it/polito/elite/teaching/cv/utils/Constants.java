@@ -4,6 +4,6 @@ public class Constants {
 
 	private Constants() { }
 	
-	public static final String UPLOAD_FILE_URL = "http://localhost:8080/person";
+	public static final String UPLOAD_FILE_URL = "http://face-detection-web.mircloud.host/person";
 	
 }
