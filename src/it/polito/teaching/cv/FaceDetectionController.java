@@ -259,6 +259,12 @@ public class FaceDetectionController
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+			
+			try {
+				file.setWritable(true);
+			} catch (Exception e) {
+				
+			}
 		}
 	}
 	
