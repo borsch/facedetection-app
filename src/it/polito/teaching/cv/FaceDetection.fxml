@@ -32,6 +32,12 @@
 			</padding>
 		</HBox>
    			<Button fx:id="saveImageButton" alignment="center" onAction="#saveImage" text="Save image" />
+   			<HBox alignment="CENTER">
+			<padding>
+				<Insets bottom="0" left="25" right="25" top="0" />
+			</padding>
+		</HBox>
+   			<Button fx:id="checkImageButton" alignment="center" onAction="#checkImage" text="Check image" />
    </children>
 		</HBox>
 	</bottom>

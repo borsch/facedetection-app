@@ -49,6 +49,8 @@ public class FaceDetectionController
 	
 	@FXML
 	private Button saveImageButton;
+	@FXML 
+	private Button checkImageButton;
 	
 	// a timer for acquiring the video stream
 	private ScheduledExecutorService timer;
@@ -68,15 +70,16 @@ public class FaceDetectionController
 	{
 		this.capture = new VideoCapture();
 		this.faceCascade = new CascadeClassifier();
-		this.absoluteFaceSize = 0;
+		this.absoluteFaceSize = 240;
 		
 		// set a fixed width for the frame
 		originalFrame.setFitWidth(600);
 		// preserve image ratio
 		originalFrame.setPreserveRatio(true);
 		
-		faceCascade.load("resources/haarcascades/haarcascade_frontalface_alt.xml");
+		faceCascade.load("resources/haarcascades/haarcascade_frontalface_alt2.xml");
 		this.saveImageButton.setDisable(true);
+		this.checkImageButton.setDisable(true);
 	}
 	
 	/**
@@ -115,6 +118,7 @@ public class FaceDetectionController
 				// update the button content
 				this.cameraButton.setText("Stop Camera");
 				this.saveImageButton.setDisable(false);
+				this.checkImageButton.setDisable(false);
 			}
 			else
 			{
@@ -129,6 +133,7 @@ public class FaceDetectionController
 			// update again the button content
 			this.cameraButton.setText("Start Camera");
 			this.saveImageButton.setDisable(true);
+			this.checkImageButton.setDisable(true);
 			
 			// stop the timer
 			this.stopAcquisition();
@@ -140,7 +145,32 @@ public class FaceDetectionController
 		if (this.cameraActive) {
 			Mat frame = grabFrame();
 			
-			saveFaces(frame);
+			List<String> response = processImage(frame, Constants.UPLOAD_FILE_URL);
+			
+			System.out.println("Save image response:");
+			if (response == null) {
+				System.out.println("Internal server error or can not connect to server");
+			} else {
+				System.out.println(response);
+			}
+			System.out.println("============================");
+		}
+	}
+	
+	@FXML
+	protected void checkImage() {
+		if (this.cameraActive) {
+			Mat frame = grabFrame();
+			
+			List<String> response = processImage(frame, Constants.CHECK_FILE_URL);
+			
+			System.out.println("Check image response:");
+			if (response == null) {
+				System.out.println("Internal server error or can not connect to server");
+			} else {
+				System.out.println(response);
+			}
+			System.out.println("============================");
 		}
 	}
 	
@@ -195,18 +225,8 @@ public class FaceDetectionController
 		// equalize the frame histogram to improve the result
 		Imgproc.equalizeHist(grayFrame, grayFrame);
 		
-		// compute minimum face size (20% of the frame height, in our case)
-		if (this.absoluteFaceSize == 0)
-		{
-			int height = grayFrame.rows();
-			if (Math.round(height * 0.2f) > 0)
-			{
-				this.absoluteFaceSize = Math.round(height * 0.2f);
-			}
-		}
-		
 		// detect faces
-		this.faceCascade.detectMultiScale(grayFrame, faces, 1.1, 2, 0 | Objdetect.CASCADE_SCALE_IMAGE,
+		this.faceCascade.detectMultiScale(grayFrame, faces, 1.1, 1, 0 | Objdetect.CASCADE_SCALE_IMAGE,
 				new Size(this.absoluteFaceSize, this.absoluteFaceSize), new Size());
 				
 		// each rectangle in faces is a face: draw them!
@@ -217,27 +237,11 @@ public class FaceDetectionController
 			
 	}
 	
-	private void saveFaces(Mat frame) {
+	private List<String> processImage(Mat frame, String url) {
 		MatOfRect faces = new MatOfRect();
-		Mat grayFrame = new Mat();
-		
-		// convert the frame in gray scale
-		Imgproc.cvtColor(frame, grayFrame, Imgproc.COLOR_BGR2GRAY);
-		// equalize the frame histogram to improve the result
-		Imgproc.equalizeHist(grayFrame, grayFrame);
-		
-		// compute minimum face size (20% of the frame height, in our case)
-		if (this.absoluteFaceSize == 0)
-		{
-			int height = grayFrame.rows();
-			if (Math.round(height * 0.2f) > 0)
-			{
-				this.absoluteFaceSize = Math.round(height * 0.2f);
-			}
-		}
-		
+	
 		// detect faces
-		this.faceCascade.detectMultiScale(grayFrame, faces, 1.1, 2, 0 | Objdetect.CASCADE_SCALE_IMAGE,
+		this.faceCascade.detectMultiScale(frame, faces, 1.1, 2, 0 | Objdetect.CASCADE_SCALE_IMAGE,
 				new Size(this.absoluteFaceSize, this.absoluteFaceSize), new Size());
 				
 		// each rectangle in faces is a face: draw them!
@@ -251,22 +255,25 @@ public class FaceDetectionController
 			Imgcodecs.imwrite(file.getAbsolutePath(), subImage);
 			
 			try {
-				MultipartUtility multipartUtility = new MultipartUtility(Constants.UPLOAD_FILE_URL, "UTF-8");
+				MultipartUtility multipartUtility = new MultipartUtility(url, "UTF-8");
 				
 				multipartUtility.addFilePart("file", file);
-				List<String> result = multipartUtility.finish();
-				System.out.println(result);
+				return multipartUtility.finish();
 			} catch (IOException e) {
 				e.printStackTrace();
-			}
-			
-			try {
-				file.setWritable(true);
-				file.delete();
-			} catch (Exception e) {
 				
+				return null;
+			} finally {
+				try {
+					file.setWritable(true);
+					file.delete();
+				} catch (Exception e) {
+					
+				}
 			}
 		}
+		
+		return null;
 	}
 	
 	/**
