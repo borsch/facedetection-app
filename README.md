@@ -1,6 +1,6 @@
 # Face Detection security app project - desktop app
 
-Face Detection security app consistі of 3 project: [Web project](https://github.com/borsch/facedetection-web), [Desktop app](https://github.com/borsch/facedetection-app), and this one
+Face Detection security app consistі of 3 project: [Web project](https://github.com/borsch/facedetection-web), [Lock project](https://github.com/borsch/facedetection-lock), and this one
 
 ## Description
 This part of project is a desktop app that use installer web camera to recognize person face and send it to the [web project](https://github.com/borsch/facedetection-web), where face will be recognized as friend or "enemy"
